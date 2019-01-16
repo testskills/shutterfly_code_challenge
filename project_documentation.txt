@@ -1,0 +1,69 @@
+Project Documentation:
+
+Language : Java 1.8 , SQLLite 3
+
+3rd party jars: 
+
+sqllite-jdbc-3.23.1.jar
+json-simple-1.1.1.jar
+(Location: /lib folder)
+
+Source package Structure:
+
+db
+	 sqlLiteConnection.java
+	 CreateDBArtifacts.java
+
+main
+	 MainCustomerLTV.java
+
+input
+	 input.txt
+
+output
+	 output.txt
+
+lib
+	 sqllite-jdbc-3.23.1.jar
+	 json-simple-1.1.1.jar
+
+Compile instructions:
+
+Please setup Java project with any IDE and add external jars in lib folder. Alternatively from command line you can compile project by adding external jars into classpath. 
+
+How to Execute:
+MainCustomerLTV is entry point to run this project.  Please execute main.MainCustomerLTV class, it will prompt you for user  inputs for input file to process , Top number of records and output file location.
+
+Example:
+
+Enter fully qualified INPUT file name: 
+/Users/yjadhav/eclipse-workspace/shutterfly_assignment/input/input.txt
+Enter value for Top Number of records: 
+2
+Enter fully qualified OUTPUT file name: 
+/Users/yjadhav/eclipse-workspace/shutterfly_assignment/output/output.txt
+
+
+Current scope of implementation:
+
+Currently its processing one input file in single threaded architecture and loading data sequentially to the database. Database is not persisted and valid only till the generation of output.txt  Bad records are skipped with warning. It will process rest of the records and won’t exit program.
+
+Future scope of improvements:
+
+Enhancements can be possible to process multiple files as well as breaking large input files to multi parts and processing in parallel. Datawarehouse can be persisted to generate visualization report in future.  
+
+Test cases executed:
+
+1.	Processing input file with 1 record
+2.	Processing input file with 50 records
+3.	Processing input file with 200000 records. It took 4 mins to generate output.txt. There is scope of improvement to these performance numbers.
+4.	Processing 0 kb/empty input file
+5.	Input file with incorrect TYPE
+6.	Input file with incorrect verb
+7.	Input file with null values for not null columns
+
+
+
+
+
+
