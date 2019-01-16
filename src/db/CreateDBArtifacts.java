@@ -31,17 +31,17 @@ public class CreateDBArtifacts {
 		
 		    statement.executeUpdate("drop table if exists SiteVisit");
 		    statement.executeUpdate("CREATE TABLE SiteVisit (page_id TEXT PRIMARY KEY , "
-		    		+ "event_time DATE, customer_id TEXT, tags TEXT, FOREIGN KEY(customer_id) "
+		    		+ "event_time DATE NOT NULL, customer_id TEXT NOT NULL, tags TEXT, FOREIGN KEY(customer_id) "
 		    		+ "REFERENCES customer(customer_id))");
 		    
 		    statement.executeUpdate("drop table if exists image");
 		    statement.executeUpdate("CREATE TABLE image(image_id TEXT PRIMARY KEY ,"
-		    		+ " event_time DATE, customer_id TEXT, camera_make TEXT, camera_model TEXT, "
+		    		+ " event_time DATE NOT NULL, customer_id TEXT NOT NULL, camera_make TEXT, camera_model TEXT, "
 		    		+ "FOREIGN KEY(customer_id) REFERENCES customer(customer_id))");
 		    
 		    statement.executeUpdate("drop table if exists Orders");
 		    statement.executeUpdate("CREATE TABLE Orders (order_id TEXT PRIMARY KEY , "
-		    		+ "event_time DATE, customer_id TEXT, total_amount REAL, "
+		    		+ "event_time DATE NOT NULL, customer_id TEXT NOT NULL, total_amount REAL NOT NULL, "
 		    		+ "FOREIGN KEY(customer_id) REFERENCES Customer(customer_id))");
 		    
 		    statement.executeUpdate("drop table if exists analytical_LTV");
@@ -73,18 +73,17 @@ public class CreateDBArtifacts {
 			
 			if (jsonObject.get("verb").equals("NEW"))
 			{
+				connection = dbo.getConnection();
 			
-			connection = dbo.getConnection();
+				pstmt = connection.prepareStatement("INSERT INTO customer VALUES (?,?,?,?,?)");  
 			
-		    pstmt = connection.prepareStatement("INSERT INTO customer VALUES (?,?,?,?,?)");  
-			
-			pstmt.setString(1, (String) jsonObject.get("key"));
-			pstmt.setString(2, (String) jsonObject.get("event_time"));
-			pstmt.setString(3, (String) jsonObject.get("last_name"));
-			pstmt.setString(4, (String) jsonObject.get("adr_city"));
-			pstmt.setString(5, (String) jsonObject.get("adr_state"));
+				pstmt.setString(1, (String) jsonObject.get("key"));
+				pstmt.setString(2, (String) jsonObject.get("event_time"));
+				pstmt.setString(3, (String) jsonObject.get("last_name"));
+				pstmt.setString(4, (String) jsonObject.get("adr_city"));
+				pstmt.setString(5, (String) jsonObject.get("adr_state"));
 		    
-			pstmt.executeUpdate();  
+				pstmt.executeUpdate();  
 		  
 			}
 			else if (jsonObject.get("verb").equals("UPDATE"))
@@ -138,52 +137,44 @@ public class CreateDBArtifacts {
 	{
 		try {
 			
-			if (jsonObject.get("verb").equals("NEW"))
-			{
+			if (jsonObject.get("verb").equals("NEW")) {
+				connection = new sqlLiteConnection().getConnection();
 			
-			connection = new sqlLiteConnection().getConnection();
+				pstmt = connection.prepareStatement("INSERT INTO SiteVisit VALUES (?,?,?,?)");  
 			
-		    pstmt = connection.prepareStatement("INSERT INTO SiteVisit VALUES (?,?,?,?)");  
-			
-			pstmt.setString(1, (String) jsonObject.get("key"));
-			pstmt.setString(2, (String) jsonObject.get("event_time"));
-			pstmt.setString(3, (String) jsonObject.get("customer_id"));
-			pstmt.setString(4, jsonObject.get("tags").toString());
+				pstmt.setString(1, (String) jsonObject.get("key"));
+				pstmt.setString(2, (String) jsonObject.get("event_time"));
+				pstmt.setString(3, (String) jsonObject.get("customer_id"));
+				pstmt.setString(4, jsonObject.get("tags").toString());
 			
 		    
-			pstmt.executeUpdate();  
+				pstmt.executeUpdate();  
 		 
-			
 			}
-			
-		
-		  else
-		   {
-			System.out.println("Warning: Incorrect Type while updating SITEVISIT data, skipping record");
+		   else {
+			   System.out.println("Warning: Incorrect Type while updating SITEVISIT data, skipping record");
 		   }
 	  
-	    } catch (SQLException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}  
-
-     finally
-     {
-    	 if (connection !=null)
-    	 {
-    		 try {
-				// pstmt.close();
-				 new sqlLiteConnection().closeConnection(connection);
+	    } 
+		catch (SQLException e) {
+	    	// TODO Auto-generated catch block
+	    	e.printStackTrace();
+	    }
+		finally
+		{
+			if (connection !=null)
+			{
+				try {
+					// pstmt.close();
+					new sqlLiteConnection().closeConnection(connection);
 				 
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				} 
+				catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-    	 }
-    	 
-    	
-    	 
-     }
+		}
    }
 	
 	/*
@@ -193,87 +184,66 @@ public class CreateDBArtifacts {
 	public void loadImageData(JSONObject jsonObject)
 	  {
 		
-		try 
-		{
+		try {	
+			if (jsonObject.get("verb").equals("UPLOAD")) {
 			
-			if (jsonObject.get("verb").equals("UPLOAD"))
-			{
+				connection = new sqlLiteConnection().getConnection();
 			
-			connection = new sqlLiteConnection().getConnection();
+				pstmt = connection.prepareStatement("INSERT INTO image VALUES (?,?,?,?,?)");  
 			
-		    pstmt = connection.prepareStatement("INSERT INTO image VALUES (?,?,?,?,?)");  
-			
-			pstmt.setString(1, (String) jsonObject.get("key"));
-			pstmt.setString(2, (String) jsonObject.get("event_time"));
-			pstmt.setString(3, (String) jsonObject.get("customer_id"));
-			pstmt.setString(4, (String) jsonObject.get("camera_make"));
-			pstmt.setString(5, (String) jsonObject.get("camera_model"));
+				pstmt.setString(1, (String) jsonObject.get("key"));
+				pstmt.setString(2, (String) jsonObject.get("event_time"));
+				pstmt.setString(3, (String) jsonObject.get("customer_id"));
+				pstmt.setString(4, (String) jsonObject.get("camera_make"));
+				pstmt.setString(5, (String) jsonObject.get("camera_model"));
 			
 		    
-			pstmt.executeUpdate();  
-		 
-			
+				pstmt.executeUpdate();  		
 			}
-			
-		
-		  else
-		 {
-			System.out.println("Warning: Incorrect Type while updating IMAGE data, skipping record");
-		  }
+			else {
+				System.out.println("Warning: Incorrect Type while updating IMAGE data, skipping record");
+			}
 	  
 	    } catch (SQLException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}  
+	    	// TODO Auto-generated catch block
+	    	e.printStackTrace();
+	    }  
 
-     finally
-     {
-    	 if (pstmt !=null)
-    	 {
-    		 try {
-				// pstmt.close();
-				 new sqlLiteConnection().closeConnection(connection);
+		finally {
+			if (connection !=null) {
+				try {
+					// pstmt.close();
+					new sqlLiteConnection().closeConnection(connection);
 				 
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-    	 }
-    	 
-    	
-    	 
-     }
+		}
 	}
 	
 	/*
 	 * load orders data into ORDERS table. Skip bad record
 	 */
 	
-	public void loadOrdersData(JSONObject jsonObject)
-	
+	public void loadOrdersData(JSONObject jsonObject)	
 	{
-		try 
-		{
+		try {
+			if (jsonObject.get("verb").equals("NEW")) {
+				connection = new sqlLiteConnection().getConnection();
 			
-			if (jsonObject.get("verb").equals("NEW"))
-			{
+				pstmt = connection.prepareStatement("INSERT INTO Orders VALUES (?,?,?,?)");  
 			
-			connection = new sqlLiteConnection().getConnection();
-			
-		    pstmt = connection.prepareStatement("INSERT INTO Orders VALUES (?,?,?,?)");  
-			
-			pstmt.setString(1, (String) jsonObject.get("key"));
-			pstmt.setString(2, (String) jsonObject.get("event_time"));
-			pstmt.setString(3, (String) jsonObject.get("customer_id"));
-			pstmt.setString(4, (String) jsonObject.get("total_amount"));
+				pstmt.setString(1, (String) jsonObject.get("key"));
+				pstmt.setString(2, (String) jsonObject.get("event_time"));
+				pstmt.setString(3, (String) jsonObject.get("customer_id"));
+				pstmt.setString(4, (String) jsonObject.get("total_amount"));
 			
 		    
-			pstmt.executeUpdate();  
-		 
-			
+				pstmt.executeUpdate();  
 			}
-			else if (jsonObject.get("verb").equals("UPDATE"))
-			{
+			else if (jsonObject.get("verb").equals("UPDATE")) {
 				connection = new sqlLiteConnection().getConnection();
 				pstmt = connection.prepareStatement("UPDATE Orders set event_time=?,customer_id=?,total_amount=?"
 												 + " where order_id=?"); 
@@ -284,37 +254,26 @@ public class CreateDBArtifacts {
 				pstmt.setString(4, (String) jsonObject.get("order_id"));
 				
 			}
-			else
-			{
+			else {
 				System.out.println("Warning: Incorrect Type while updating customer data, skipping record");
 			}
 		  
 		} 
 		
-		catch (SQLException e) 
-		{
+		catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}  
-
-	     finally
-	     {
-	    	 if (connection !=null)
-	    	 {
+		finally {
+	    	 if (connection !=null) {
 	    		 try {
-					 
 					 new sqlLiteConnection().closeConnection(connection);
-					 
-				} catch (Exception e) {
+				 } 
+	    		 catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 	    	 }
-	    	 
-	    	
-	    	 
-	     }
-		
-	}
-	
+	     }		
+	}	
 }
