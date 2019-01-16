@@ -1,1 +1,5 @@
-Your output data will end up here
+customer_id	LTV
+---------------------------
+custid5c7d8f47	269360.0
+custid5c7dwf44	25410.21
+custid5c7d8f42	16835.0
