@@ -27,15 +27,11 @@ public class MainCustomerLTV {
 	static String output_filename=null;
 	
 	/* 
-	 * Method to ingest json input data to SQLLite schema.If any data issue it will skip only that record 
+	 * Method to ingest json input data to SQLLite schema. If any data issue it will skip only that record 
 	 * and will continue to load rest
-	 * 
-	*/
-	
-	 
-	private  void Ingest(JSONArray jsonArray,CreateDBArtifacts cda) throws ParseException
+	 */		 
+	private void Ingest(JSONArray jsonArray, CreateDBArtifacts cda) throws ParseException
 	{
-		
 		for(Object str:jsonArray)
         {
      	   JSONObject jsonObject = (JSONObject)  new JSONParser().parse(str.toString());  
@@ -63,34 +59,31 @@ public class MainCustomerLTV {
      	  		System.out.println("Warning: Type not found skipping record");
              break;
           }
-        }
-		
-		//cda.topData();
-		
+        }		
 	}
 	
 	/* 
 	 * Method to calculate LTV value. First it loads data into analytical table and then select
 	 * top records based on input. It will redirect output to file
-	 * Logic  used to calculate LTV:
+	 * Logic used to calculate LTV:
 	 * 52 * D (default:10) * total amount spent by customer / number of site visit weeks per customer
 	 * 
-	*/
+	 */
 	
 	private  void TopXSimpleLTVCustomers(int x,int D)
 	{
-		Connection connection;
+		Connection connection = null;
 		Statement statement;
+		FileWriter fw = null;
+
 		try
 		{
-		
-		connection = new sqlLiteConnection().getConnection();
-		statement = connection.createStatement();					  		
-	   
+			connection = new sqlLiteConnection().getConnection();
+			statement = connection.createStatement();					  		
         
-        //load LTV analytical table
+			//load LTV analytical table
         
-       statement.executeUpdate("insert into analytical_LTV select orders_data.customer_id,"
+			statement.executeUpdate("insert into analytical_LTV select orders_data.customer_id,"
         		+ "ifnull (52*"+D +"*(total_amount/ number_of_Weeks),1) as LTV from "
         		+ " (select customer_id,sum(total_amount) total_amount from orders"
 	    		+ " group by customer_id ) orders_data,"
@@ -100,37 +93,54 @@ public class MainCustomerLTV {
 	    		+ " where orders_data.customer_id=weeks_data.customer_id"
 	    		+ "");  
 	    
-	    
-	    FileWriter fw=new FileWriter(new File(output_filename));
-	    
-	    ResultSet rs   = statement.executeQuery("select * from analytical_LTV order by LTV desc limit "+x);  
+			fw = new FileWriter(new File(output_filename));
+	    	    
+			ResultSet rs = statement.executeQuery("select customer_id,round(LTV,2) LTV from analytical_LTV order by LTV desc limit "+x);  
 	    
         
-        // loop through the result set  
-        while (rs.next()) {  
-        	fw.write(String.format(rs.getString("customer_id")));
-        	fw.write("\t");
-     	    fw.write(String.format(rs.getString("LTV")));
-    	    fw.write(System.lineSeparator());
+			fw.write(String.format("customer_id"));
+			fw.write("\t");
+			fw.write(String.format("LTV"));
+			fw.write(System.lineSeparator());
+			fw.write(String.format("---------------------------")); 
+			fw.write(System.lineSeparator());
+			
+			System.out.println("customer_id" +  "\t" + "LTV"); 
+			System.out.println("---------------------------"); 
+			// loop through the result set  
+			while (rs.next()) {  
+				fw.write(String.format(rs.getString("customer_id")));
+				fw.write("\t");
+				fw.write(String.format(rs.getString("LTV")));
+				fw.write(System.lineSeparator());
     	    
-            System.out.println(rs.getString("customer_id") +  "\t" + 
+				System.out.println(rs.getString("customer_id") +  "\t" + 
                                rs.getString("LTV")); 
             
-        } 
+			} 
         
-        fw.close();
 		}
 		catch(Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			
+			e.printStackTrace();		
+		}
+		finally {
+				try {
+					fw.close();
+					if (connection !=null)
+					{
+						new sqlLiteConnection().closeConnection(connection);
+					}
+				}
+				catch(Exception e1) {
+				e1.printStackTrace();	
+
+			}
 		}
 	}
-	public static void main(String[] args) {
-		
-		
+	
+	public static void main(String[] args) {	
 		// Accept input file name, top records and output file name from user
-		
 		System.out.println("Enter fully qualified INPUT file name: ");
 		Scanner scanner = new Scanner(System.in);
 		String json = scanner.nextLine();
@@ -147,31 +157,25 @@ public class MainCustomerLTV {
 		MainCustomerLTV main_obj=new MainCustomerLTV();
 		
 		try{
-        	
         	//Shutterfly Average customer lifespan: 10 years
-        	   int D=10;
+           int D=10;
 			 
-	         //parse input json file
-        	   
-	           FileReader reader = new FileReader(json);
-	   	       JSONParser jsonParser = new JSONParser();
+	       //parse input json file
+           FileReader reader = new FileReader(json);
+	       JSONParser jsonParser = new JSONParser();
 	           
-	           JSONArray jsonArray = (JSONArray) jsonParser.parse(reader);
+	       JSONArray jsonArray = (JSONArray) jsonParser.parse(reader);    
+	       CreateDBArtifacts cda =new CreateDBArtifacts();
 	           
-	           CreateDBArtifacts cda =new CreateDBArtifacts();
+	       //create in-memory SQLLite schema
+	       cda.createSchema();
 	           
-	           //create in-memory SQLLite schema
-	           cda.createSchema();
+	       //Ingest input json data into database
+	       main_obj.Ingest(jsonArray,cda);
 	           
-	           //Ingest input json data into database
-	           main_obj.Ingest(jsonArray,cda);
-	           
-	           //Calculate LTV for top x customers and redirect output to file
-	           main_obj.TopXSimpleLTVCustomers(top,D);
-	          
-	 
-	        } 
-		
+	       //Calculate LTV for top x customers and redirect output to file
+	       main_obj.TopXSimpleLTVCustomers(top,D);
+		}
 		catch (ParseException p)
 		{
 			System.out.println("ERROR: Unable to parse input file");
@@ -184,10 +188,6 @@ public class MainCustomerLTV {
 		}
 		catch (Exception e) {
 	            e.printStackTrace();
-	        }
-
-		}
-
+	    }
 	}
-
-
+}
