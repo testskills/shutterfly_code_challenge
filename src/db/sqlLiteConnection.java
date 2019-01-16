@@ -18,23 +18,20 @@ public class sqlLiteConnection {
 		Connection connection = null;
 		try
 		{
-		Class.forName("org.sqlite.JDBC");
-		
-		connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
+			Class.forName("org.sqlite.JDBC");
+			connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
 		}
-		
 		catch(SQLException e)
 	    {
-	      // if the error message is "out of memory", 
-	      // it probably means no database file is found
-	      System.err.println(e.getMessage());
-	    }
-		
+			// if the error message is "out of memory", 
+			// it probably means no database file is found
+			System.err.println(e.getMessage());
+	    }	
 		catch(Exception e)
 	    {
-	      // if the error message is "out of memory", 
-	      // it probably means no database file is found
-	      System.err.println(e.getMessage());
+			// if the error message is "out of memory", 
+			// it probably means no database file is found
+			System.err.println(e.getMessage());
 	    }
 		return connection;
 	}
@@ -46,15 +43,15 @@ public class sqlLiteConnection {
 	{
 		 try
 	      {
-	        if(connection != null)
-	          connection.close();
+	        if(connection != null) {
+		          connection.close();
+	        }
 	      }
 	      catch(SQLException e)
 	      {
 	        // connection close failed.
 	        System.err.println(e);
 	      }
-	    
 	}
 
 }
